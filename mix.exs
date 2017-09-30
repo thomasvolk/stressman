@@ -14,14 +14,15 @@ defmodule Stress.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      applications: [:logger, :httpoison]
+      applications: [:logger, :httpoison, :timex]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 0.13"}
+      {:httpoison, "~> 0.13"},
+      {:timex, "~> 3.0"}
     ]
   end
 end
