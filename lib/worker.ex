@@ -1,5 +1,4 @@
 defmodule Stress.Worker do
-  use Timex
   require Logger
 
   def start(url, http_client \\ &HTTPoison.get/1) do

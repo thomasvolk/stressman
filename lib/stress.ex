@@ -11,13 +11,18 @@ defmodule Stress do
                               strict: [requests: :integer])
   end
 
+  def usage(output) do
+    output.("Stress 0.1")
+    output.("Copyright 2017 Thomas Volk")
+    output.("usage: stress -n count URL")
+  end
+
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
-        
         0
       _ ->
-        output.("ERROR")
+        usage(output)
         1
     end
   end
