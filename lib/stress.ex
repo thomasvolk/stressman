@@ -1,5 +1,6 @@
 defmodule Stress do
   alias Stress.Report, as: Report
+  alias Stress.Duration, as: Duration
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
 
@@ -40,8 +41,8 @@ defmodule Stress do
 
   def simple_run(n, url, http_client, output) when n > 0 do
     worker = fn -> Stress.Worker.start(url, http_client) end
-    results = 1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity))
-    Report.generate(results, output)
+    {timestamp, results} = Duration.measure( fn -> 1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity)) end)
+    Report.generate(results, timestamp, output)
   end
 
 end
