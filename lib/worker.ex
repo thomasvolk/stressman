@@ -2,8 +2,8 @@ defmodule Stress.Worker do
   use Timex
   require Logger
 
-  def start(url, func \\ &HTTPoison.get/1) do
-     {timestamp, response} = Duration.measure(fn -> func.(url) end)
+  def start(url, http_client \\ &HTTPoison.get/1) do
+     {timestamp, response} = Duration.measure(fn -> http_client.(url) end)
      handle_response({Duration.to_milliseconds(timestamp), response})
   end
 
