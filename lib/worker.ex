@@ -9,16 +9,12 @@ defmodule Stress.Worker do
      result
   end
 
-  defp handle_response({milliseconds, {:ok, %HTTPoison.Response{ status_code: code}}}) when code >= 200 and code < 300 do
-    {:ok, {code, milliseconds}}
-  end
-
-  defp handle_response({milliseconds, {:ok, %HTTPoison.Response{ status_code: code}}}) when code >= 300 and code < 400 do
-    {:redirect, {code, milliseconds}}
-  end
-
   defp handle_response({milliseconds, {:ok, %HTTPoison.Response{ status_code: code}}}) do
-    {:error, {code, milliseconds}}
+    case code do
+      code when code >= 200 and code < 300 -> {:ok, {code, milliseconds}}
+      code when code >= 300 and code < 400 -> {:redirect, {code, milliseconds}}
+      _ -> {:error, {code, milliseconds}}
+    end
   end
 
   defp handle_response({_ms, {:error, reason}}) do
