@@ -1,4 +1,5 @@
 defmodule Stress do
+  alias Stress.Report, as: Report
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
 
@@ -39,8 +40,8 @@ defmodule Stress do
 
   def simple_run(n, url, http_client, output) when n > 0 do
     worker = fn -> Stress.Worker.start(url, http_client) end
-    result = 1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity))
-    output.("#{inspect result}")
+    results = 1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity))
+    Report.generate(results, output)
   end
 
 end
