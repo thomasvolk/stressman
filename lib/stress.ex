@@ -10,7 +10,7 @@ defmodule Stress do
 
   defp parse_args(args) do
     OptionParser.parse(args, aliases: [n: :requests],
-                              strict: [requests: :integer])
+                              strict: [requests: :integer, server: :string])
   end
 
   def usage(output) do
@@ -32,10 +32,19 @@ defmodule Stress do
       {[requests: n], [url], []} ->
         simple_run(n, url, http_client, output)
         0
+      {[server: name], [], []} ->
+        start_server(name)
       _ ->
         output.("ERROR: wrong parameter!")
         usage(output)
         1
+    end
+  end
+
+  def start_server(name) do
+    Node.start(String.to_atom(name))
+    receive do
+       { :halt_server } -> 0
     end
   end
 
