@@ -21,8 +21,8 @@ defmodule Stress.Report do
     """)
   end
 
-  def average(values) do
-    Enum.sum(values) / Enum.count(values)
-  end
+  def average([]), do: nil
+
+  def average(values), do: Enum.sum(values) / Enum.count(values)
 
 end

@@ -1,15 +1,16 @@
 defmodule Stress.Client do
   alias Stress.TasksSupervisor
+  require Logger
 
   def round_robin([first_item|rest]) do
     {first_item, rest ++ [first_item]}
   end
 
   def run(n, name, node_list, url, http_client) when n > 0 do
+    Logger.info("start client: #{name}")
     Node.start(name)
     node_list |> Enum.each(&Node.connect/1)
-    worker_nodes = [node()|Node.list()]
-    start_worker(n, round_robin(worker_nodes), url, http_client, [])
+    start_worker(n, round_robin(Node.list()), url, http_client, [])
   end
 
   defp start_worker(n, {worker, worker_nodes}, url, http_client, tasks) when n > 0 do

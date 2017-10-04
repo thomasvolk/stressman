@@ -5,7 +5,7 @@ defmodule Stress.Worker do
   def start(url, http_client \\ &HTTPoison.get/1) do
      {timestamp, response} = Duration.measure(fn -> http_client.(url) end)
      result = handle_response({timestamp, response})
-     Logger.debug("worker #{node()}-#{inspect self()} success: #{inspect result}")
+     Logger.info("worker #{node()}-#{inspect self()} success: #{inspect result}")
      result
   end
 
@@ -18,10 +18,12 @@ defmodule Stress.Worker do
   end
 
   defp handle_response({_ms, {:error, reason}}) do
+    Logger.error("worker #{node()}-#{inspect self()} error: #{inspect reason}")
     {:error, reason}
   end
 
   defp handle_response({_ms, _}) do
+    Logger.error("worker #{node()}-#{inspect self()} error: unknown")
     {:error, :unknown}
   end
 end
