@@ -20,6 +20,8 @@ defmodule Stress.CLI do
     Stress 0.1
     Copyright 2017 Thomas Volk
     usage:
+      start the port mapper daemon first:
+        epmd -daemon
       simple:
         stress --requests <REQUESTS> <URL>
       client:
