@@ -9,6 +9,7 @@ defmodule Stress.Client do
   def run(n, name, node_list, url, http_client) when n > 0 do
     Logger.info("start client: #{name}")
     Node.start(name)
+    Node.set_cookie(:stress_geeg6Eid)
     node_list |> Enum.each(&Node.connect/1)
     start_worker(n, round_robin(Node.list()), url, http_client, [])
   end
