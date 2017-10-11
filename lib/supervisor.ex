@@ -1,4 +1,4 @@
-defmodule Stress.Supervisor do
+defmodule StressMan.Supervisor do
   use Supervisor
 
   def start_link(:ok) do
@@ -7,7 +7,7 @@ defmodule Stress.Supervisor do
 
   def init(:ok) do
     children = [
-      supervisor(Task.Supervisor, [[name: Stress.TasksSupervisor]])
+      supervisor(Task.Supervisor, [[name: StressMan.TasksSupervisor]])
     ]
 
     supervise(children, [strategy: :one_for_one])

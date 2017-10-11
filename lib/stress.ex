@@ -1,8 +1,8 @@
-defmodule Stress do
+defmodule StressMan do
   use Application
 
   def start(_type, _args) do
-    Stress.Supervisor.start_link(:ok)
+    StressMan.Supervisor.start_link(:ok)
   end
 
 end

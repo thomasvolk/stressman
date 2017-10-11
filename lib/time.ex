@@ -1,4 +1,4 @@
-defmodule Stress.Duration do
+defmodule StressMan.Duration do
   def measure(func) do
      start_time = :os.system_time(:millisecond)
      result = func.()

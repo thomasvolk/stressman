@@ -1,9 +1,9 @@
-defmodule Stress.Server do
+defmodule StressMan.Server do
   require Logger
-  def start(name) do
+  def start(name, cookie) do
     Logger.info("start server: #{name}")
     Node.start(name)
-    Node.set_cookie(:stress_geeg6Eid)
+    Node.set_cookie(:"#{cookie}")
     receive do
        { :halt_server } -> 0
     end

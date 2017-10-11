@@ -3,18 +3,18 @@ defmodule Stress.Mixfile do
 
   def project do
     [
-      app: :stress,
+      app: :stressman,
       version: "0.1.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env == :prod,
-      escript: [main_module: Stress.CLI],
+      escript: [main_module: StressMan.CLI],
       deps: deps()
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
-    [ mod: {Stress, []},
+    [ mod: {StressMan, []},
       applications: [:logger, :httpoison]
     ]
   end

@@ -1,4 +1,4 @@
-defmodule Stress.Report do
+defmodule StressMan.Report do
   def generate(results, total_time_ms, output) do
     total_cnt = Enum.count(results)
     success = results |> Enum.filter( fn { status, _} -> status != :error end )

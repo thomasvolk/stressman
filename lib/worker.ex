@@ -1,6 +1,6 @@
-defmodule Stress.Worker do
+defmodule StressMan.Worker do
   require Logger
-  alias Stress.Duration, as: Duration
+  alias StressMan.Duration, as: Duration
 
   def start(url, http_client \\ &HTTPoison.get/1) do
      {timestamp, response} = Duration.measure(fn -> http_client.(url) end)
