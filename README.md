@@ -1,6 +1,28 @@
 # StressMan
 
+simple use:
 
+    stressman --requests <REQUESTS> <URL>
+
+### Distributed
+
+start the port mapper daemon first:
+
+    epmd -daemon
+
+client:
+
+    stressman --client --cookie <COOKIE> --name <CLIENT_NAME_A@HOST> --nodes <SERVER_NAME_A@HOST>,<SERVER_NAME_B@HOST>,... --requests <REQUESTS> <URL>
+
+server:
+
+    stressman --server --cookie <COOKIE> --name <SERVER_NAME_A@HOST>
+
+## Build
+
+build stressman with mix:
+
+    mix escript.build
 
 ## Installation
 
