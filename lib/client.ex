@@ -6,12 +6,8 @@ defmodule StressMan.Client do
     {first_item, rest ++ [first_item]}
   end
 
-  def run(n, name, node_list, url, http_client, cookie) when n > 0 do
-    Logger.info("start client: #{name}")
-    Node.start(name)
-    Node.set_cookie(:"#{cookie}")
-    node_list |> Enum.each(&Node.connect/1)
-    start_worker(n, round_robin(Node.list()), url, http_client, [])
+  def run(n, nodes, url, http_client) when n > 0 do
+    start_worker(n, round_robin(nodes), url, http_client, [])
   end
 
   defp start_worker(n, {worker, worker_nodes}, url, http_client, tasks) when n > 0 do

@@ -1,8 +1,8 @@
 defmodule StressMan.CLI do
   alias StressMan.Report, as: Report
   alias StressMan.Duration, as: Duration
-  alias StressMan.Server, as: Server
   alias StressMan.Client, as: Client
+  require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
 
@@ -31,19 +31,35 @@ defmodule StressMan.CLI do
     """)
   end
 
+  defp init_node(name, cookie) do
+    Node.start(:"#{name}")
+    Node.set_cookie(:"#{cookie}")
+  end
+
+  defp to_name_list(comma_sep_list) do
+     String.split(comma_sep_list, ",") |> Enum.map(&String.trim/1) |> Enum.filter( fn s -> String.length(s) > 0 end ) |> Enum.map(&String.to_atom/1)
+  end
+
+  defp connect_to_nodes(node_list), do: node_list |> Enum.each(&Node.connect/1)
+
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
         simple_run(n, url, http_client, output)
         0
       {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
-        node_list = String.split(nodes, ",") |> Enum.map(&String.trim/1) |> Enum.filter( fn s -> String.length(s) > 0 end ) |> Enum.map(&String.to_atom/1)
-        {timestamp, results} = Duration.measure( fn -> Client.run(n, String.to_atom(name), node_list, url, http_client, cookie) end )
+        Logger.info("start client: #{name}")
+        init_node(name, cookie)
+        to_name_list(nodes) |> connect_to_nodes()
+        {timestamp, results} = Duration.measure( fn -> Client.run(n, Node.list(), url, http_client) end )
         Report.generate(results, timestamp, output)
         0
       {[server: true, cookie: cookie, name: name], [], []} ->
-        Server.start(String.to_atom(name), cookie)
-        0
+        Logger.info("start server: #{name}")
+        init_node(name, cookie)
+        receive do
+           { :halt_server } -> 0
+        end
       _ ->
         output.("ERROR: wrong parameter!")
         usage(output)
