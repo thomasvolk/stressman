@@ -1,4 +1,4 @@
-defmodule Stress.Mixfile do
+defmodule StressMan.Mixfile do
   use Mix.Project
 
   def project do
