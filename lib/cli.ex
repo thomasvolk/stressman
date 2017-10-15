@@ -45,7 +45,8 @@ defmodule StressMan.CLI do
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
-        simple_run(n, url, http_client, output)
+        {timestamp, results} = Duration.measure( fn -> Client.start_worker(n, url, http_client) end )
+        Report.generate(results, timestamp, output)
         0
       {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
         Logger.info("start client: #{name}")
@@ -65,11 +66,5 @@ defmodule StressMan.CLI do
         usage(output)
         1
     end
-  end
-
-  def simple_run(n, url, http_client, output) when n > 0 do
-    worker = fn -> StressMan.Worker.start(url, http_client) end
-    {timestamp, results} = Duration.measure( fn -> 1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity)) end )
-    Report.generate(results, timestamp, output)
   end
 end
