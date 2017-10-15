@@ -45,15 +45,15 @@ defmodule StressMan.CLI do
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
-        {timestamp, results} = Duration.measure( fn -> Client.start_worker(n, url, http_client) end )
-        Report.generate(results, timestamp, output)
+        Duration.measure( fn -> Client.start_local_worker(n, url, http_client) end )
+          |> Report.generate() |> print_report(output)
         0
       {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
         Logger.info("start client: #{name}")
         init_node(name, cookie)
         to_name_list(nodes) |> connect_to_nodes()
-        {timestamp, results} = Duration.measure( fn -> Client.run(n, Node.list(), url, http_client) end )
-        Report.generate(results, timestamp, output)
+        Duration.measure( fn -> Client.start_remote_worker(n, Node.list(), url, http_client) end )
+          |> Report.generate() |> print_report(output)
         0
       {[server: true, cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
@@ -66,5 +66,19 @@ defmodule StressMan.CLI do
         usage(output)
         1
     end
+  end
+
+  def print_report(report, output) do
+    output.("""
+    total time (ms)       #{report.total_time_ms}
+
+    total:                #{report.total_cnt}
+    success:              #{report.success_cnt}
+    errors:               #{report.error_cnt}
+
+    success calls
+      average (ms):       #{report.average}
+      throughput (req/s): #{report.throughput}
+    """)
   end
 end
