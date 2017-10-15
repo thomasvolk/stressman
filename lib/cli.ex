@@ -1,7 +1,8 @@
 defmodule StressMan.CLI do
   alias StressMan.Report, as: Report
   alias StressMan.Duration, as: Duration
-  alias StressMan.Client, as: Client
+  alias StressMan.RemoteClient, as: RemoteClient
+  alias StressMan.LocalClient, as: LocalClient
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
@@ -45,14 +46,14 @@ defmodule StressMan.CLI do
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
-        Duration.measure( fn -> Client.start_local_worker(n, url, http_client) end )
+        Duration.measure( fn -> LocalClient.start_worker(n, url, http_client) end )
           |> Report.generate() |> print_report(output)
         0
       {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
         Logger.info("start client: #{name}")
         init_node(name, cookie)
         to_name_list(nodes) |> connect_to_nodes()
-        Duration.measure( fn -> Client.start_remote_worker(n, Node.list(), url, http_client) end )
+        Duration.measure( fn -> RemoteClient.start_worker(n, Node.list(), url, http_client) end )
           |> Report.generate() |> print_report(output)
         0
       {[server: true, cookie: cookie, name: name], [], []} ->
