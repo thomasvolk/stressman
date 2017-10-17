@@ -7,18 +7,12 @@ defmodule StressMan.RemoteClient do
   end
 
   defp start_worker(n, [node|rest], url, http_client, tasks) when n > 0 do
-    new_tasks = [Task.Supervisor.async({TasksSupervisor, node}, StressMan.NodeTask, :start, [n, url, http_client]) | tasks]
+    new_tasks = [Task.Supervisor.async({TasksSupervisor, node}, StressMan.LocalClient, :start_worker, [n, url, http_client]) | tasks]
     start_worker(n, rest, url, http_client, new_tasks)
   end
 
   defp start_worker(_n, [], _url, _http_client, tasks) do
     tasks |> Enum.map(&Task.await(&1, :infinity))
-  end
-end
-
-defmodule StressMan.NodeTask do
-  def start(n, url, http_client \\ &HTTPoison.get/1) do
-     StressMan.LocalClient.start_worker(n, url, http_client)
   end
 end
 
