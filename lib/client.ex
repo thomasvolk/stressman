@@ -1,25 +1,29 @@
-defmodule StressMan.RemoteClient do
-  alias StressMan.TasksSupervisor
+defmodule StressMan.HttpClientHandler do
   require Logger
+  alias StressMan.Duration, as: Duration
 
-  def start_worker(n, nodes, url, http_client) when n > 0 do
-    start_worker(n, nodes, url, http_client, []) |> List.flatten
+  def run(url, http_client) do
+     {timestamp, response} = Duration.measure(fn -> http_client.(url) end)
+     result = handle_response({timestamp, response})
+     Logger.info("worker #{node()}-#{inspect self()}: #{inspect result}")
+     result
   end
 
-  defp start_worker(n, [node|rest], url, http_client, tasks) when n > 0 do
-    new_tasks = [Task.Supervisor.async({TasksSupervisor, node}, StressMan.LocalClient, :start_worker, [n, url, http_client]) | tasks]
-    start_worker(n, rest, url, http_client, new_tasks)
+  defp handle_response({milliseconds, {:ok, %HTTPoison.Response{ status_code: code}}}) do
+    case code do
+      code when code >= 200 and code < 300 -> {:ok, {code, milliseconds}}
+      code when code >= 300 and code < 400 -> {:redirect, {code, milliseconds}}
+      _ -> {:error, {code, milliseconds}}
+    end
   end
 
-  defp start_worker(_n, [], _url, _http_client, tasks) do
-    tasks |> Enum.map(&Task.await(&1, :infinity))
+  defp handle_response({_ms, {:error, reason}}) do
+    Logger.error("worker #{node()}-#{inspect self()} error: #{inspect reason}")
+    {:error, reason}
   end
-end
 
-defmodule StressMan.LocalClient do
-  require Logger
-  def start_worker(n, url, http_client) when n > 0 do
-    worker = fn -> StressMan.Worker.start(url, http_client) end
-    1..n |> Enum.map( fn _ -> Task.async(worker) end ) |> Enum.map(&Task.await(&1, :infinity))
+  defp handle_response({_ms, _}) do
+    Logger.error("worker #{node()}-#{inspect self()} error: unknown")
+    {:error, :unknown}
   end
 end
