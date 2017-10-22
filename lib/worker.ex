@@ -56,12 +56,12 @@ defmodule StressMan.WorkerSupervisor do
      start_link( { StressMan.Worker, :start_link, [{analyser_pid, client}] } )
   end
 
-  def start_worker(pid) do
-    Supervisor.start_child(pid, [])
-  end
-
   def start_link(mfa) do
     Supervisor.start_link(__MODULE__, mfa)
+  end
+
+  def start_worker(pid) do
+    Supervisor.start_child(pid, [])
   end
 
   def init({mod, func, args}) do
@@ -86,24 +86,26 @@ end
 
 defmodule StressMan.WorkerPool do
   use GenServer
+  alias StressMan.WorkerSupervisor
 
-  def start_link({worker_supervisor_pid, client} = state) do
-    #{:ok, pid} = WorkerSupervisor.start(client)
-    GenServer.start_link(__MODULE__, state)
+  def start_link(worker_supervisor_pid) do
+    Process.link(worker_supervisor_pid)
+    GenServer.start_link(__MODULE__, {worker_supervisor_pid})
   end
 
   def schedule(pid, url) do
     GenServer.cast(pid, {:schedule, url})
   end
 
-  def init({worker_supervisor_pid, client}) do
+  def init({worker_supervisor_pid}) do
     worker_pids = 1..System.schedulers_online()
       |> Enum.each( fn _n -> WorkerSupervisor.start_worker(worker_supervisor_pid) end )
-    {:ok, {worker_supervisor_pid, client}}
+    {:ok, {worker_supervisor_pid}}
   end
 
-  def handle_cast({:schedule, url }, state) do
-    # TODO: roundrobin to worker
+  def handle_cast({:schedule, url }, {worker_supervisor_pid} = state) do
+    [first_worker_pid|_rest] = Supervisor.which_children(worker_supervisor_pid) |> Enum.map(fn {_, pid, _, _} -> pid end) |> Enum.shuffle
+    GenServer.cast(first_worker_pid, url)
     {:noreply, state}
   end
 
@@ -131,6 +133,8 @@ defmodule WTest do
     {:ok, a_pid} = StressMan.Analyser.start_link()
     IO.puts "analyser_pid: #{inspect a_pid}"
     {:ok, ws_pid} = StressMan.WorkerSupervisor.start_link({a_pid, &StressMan.HttpClientHandler.get/1})
-    ws_pid
+    IO.puts "worker_supervisor_pid: #{inspect ws_pid}"
+    {:ok, wp_pid} = StressMan.WorkerPool.start_link(ws_pid)
+    wp_pid
   end
 end
