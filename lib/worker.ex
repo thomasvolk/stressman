@@ -3,7 +3,7 @@ defmodule StressMan.Worker do
   require Logger
   alias StressMan.Duration
 
-  def start_link({analyser_pid, client} = state) do
+  def start_link({client} = state) do
     GenServer.start_link(__MODULE__, state)
   end
 
@@ -11,11 +11,11 @@ defmodule StressMan.Worker do
     GenServer.cast(pid, url)
   end
 
-  def handle_cast(url, {analyser_pid, client}) do
+  def handle_cast(url, {client}) do
     result = Duration.measure(fn -> client.(url) end)
     Logger.info("worker #{node()}-#{inspect self()}: #{inspect result}")
-    StressMan.Analyser.add(analyser_pid, result)
-    {:noreply, {analyser_pid, client}}
+    StressMan.Analyser.add(result)
+    {:noreply, {client}}
   end
 end
 
@@ -52,8 +52,8 @@ end
 defmodule StressMan.WorkerSupervisor do
   use Supervisor
 
-  def start_link({analyser_pid, client}) do
-     start_link( { StressMan.Worker, :start_link, [{analyser_pid, client}] } )
+  def start_link({client}) do
+     start_link( { StressMan.Worker, :start_link, [{client}] } )
   end
 
   def start_link(mfa) do

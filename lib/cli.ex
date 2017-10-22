@@ -2,7 +2,7 @@ defmodule StressMan.CLI do
   alias StressMan.Report
   alias StressMan.Duration
   alias StressMan.Manager
-  alias StressMan.WorkerPool
+  #alias StressMan.WorkerPool
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
@@ -46,7 +46,7 @@ defmodule StressMan.CLI do
   defp run(options, output, http_client) do
     case options do
       {[requests: n], [url], []} ->
-        Duration.measure( fn -> WorkerPool.start(n, url, http_client) end )
+        Duration.measure( fn -> Manager.start(n, url, http_client) end )
           |> Report.generate() |> print_report(output)
         0
       {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
