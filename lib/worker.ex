@@ -24,15 +24,15 @@ defmodule StressMan.Analyser do
 
   def start_link() do
     now = StressMan.Time.now()
-    GenServer.start_link(__MODULE__, {0,0,now,now})
+    GenServer.start_link(__MODULE__, {0,0,now,now}, name: :analyser)
   end
 
-  def add(pid, {_duration, {_status, _message} } = record) do
-    GenServer.cast(pid, record)
+  def add({_duration, {_status, _message} } = record) do
+    GenServer.cast(:analyser, record)
   end
 
-  def get(pid) do
-    GenServer.call(pid, :get)
+  def get() do
+    GenServer.call(:analyser, :get)
   end
 
   def handle_call(:get, _from, state) do
@@ -124,17 +124,5 @@ defmodule StressMan.WorkerPoolSupervisor do
     ]
 
     supervise(children, [strategy: :one_for_one])
-  end
-end
-
-defmodule WTest do
-  # StressMan.WorkerSupervisor.start_worker(pid)
-  def test() do
-    {:ok, a_pid} = StressMan.Analyser.start_link()
-    IO.puts "analyser_pid: #{inspect a_pid}"
-    {:ok, ws_pid} = StressMan.WorkerSupervisor.start_link({a_pid, &StressMan.HttpClientHandler.get/1})
-    IO.puts "worker_supervisor_pid: #{inspect ws_pid}"
-    {:ok, wp_pid} = StressMan.WorkerPool.start_link(ws_pid)
-    wp_pid
   end
 end
