@@ -49,36 +49,12 @@ defmodule StressMan.Analyser do
   end
 end
 
-defmodule StressMan.WorkerPool do
-  use GenServer
-
-  def start_link({worker_supervisor_pid, client} = state) do
-    #{:ok, pid} = WorkerSupervisor.start(client)
-    GenServer.start_link(__MODULE__, state)
-  end
-
-  def schedule(pid, url) do
-    GenServer.cast(pid, {:schedule, url})
-  end
-
-  def init({worker_supervisor_pid, client}) do
-    worker_pids = 1..System.schedulers_online()
-      |> Enum.each( fn _n -> WorkerSupervisor.start_worker(worker_supervisor_pid) end )
-    {:ok, {worker_supervisor_pid, client}}
-  end
-
-  def handle_cast({:schedule, url }, state) do
-    # TODO: roundrobin to worker
-    {:noreply, state}
-  end
-
-end
-
-
 defmodule StressMan.WorkerSupervisor do
   use Supervisor
 
-  def start(client), do: start_link( { StressMan.Worker, :start_link, [client] } )
+  def start_link({analyser_pid, client}) do
+     start_link( { StressMan.Worker, :start_link, [{analyser_pid, client}] } )
+  end
 
   def start_worker(pid) do
     Supervisor.start_child(pid, [])
@@ -107,6 +83,33 @@ defmodule StressMan.WorkerSupervisor do
   end
 end
 
+
+defmodule StressMan.WorkerPool do
+  use GenServer
+
+  def start_link({worker_supervisor_pid, client} = state) do
+    #{:ok, pid} = WorkerSupervisor.start(client)
+    GenServer.start_link(__MODULE__, state)
+  end
+
+  def schedule(pid, url) do
+    GenServer.cast(pid, {:schedule, url})
+  end
+
+  def init({worker_supervisor_pid, client}) do
+    worker_pids = 1..System.schedulers_online()
+      |> Enum.each( fn _n -> WorkerSupervisor.start_worker(worker_supervisor_pid) end )
+    {:ok, {worker_supervisor_pid, client}}
+  end
+
+  def handle_cast({:schedule, url }, state) do
+    # TODO: roundrobin to worker
+    {:noreply, state}
+  end
+
+end
+
+
 defmodule StressMan.WorkerPoolSupervisor do
   use Supervisor
 
@@ -119,5 +122,15 @@ defmodule StressMan.WorkerPoolSupervisor do
     ]
 
     supervise(children, [strategy: :one_for_one])
+  end
+end
+
+defmodule WTest do
+  # StressMan.WorkerSupervisor.start_worker(pid)
+  def test() do
+    {:ok, a_pid} = StressMan.Analyser.start_link()
+    IO.puts "analyser_pid: #{inspect a_pid}"
+    {:ok, ws_pid} = StressMan.WorkerSupervisor.start_link({a_pid, &StressMan.HttpClientHandler.get/1})
+    ws_pid
   end
 end
