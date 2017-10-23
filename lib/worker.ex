@@ -7,8 +7,13 @@ defmodule StressMan.Worker do
     GenServer.start_link(__MODULE__, state)
   end
 
-  def execute(pid, url) do
-    GenServer.cast(pid, url)
+  def execute(url) do
+    GenServer.cast({:p, :l, :worker}, url)
+  end
+
+  def init(state) do
+    :gproc.reg({:p, :l, :worker})
+    {:ok, state}
   end
 
   def handle_cast(url, {client}) do
@@ -24,15 +29,20 @@ defmodule StressMan.Analyser do
 
   def start_link() do
     now = StressMan.Time.now()
-    GenServer.start_link(__MODULE__, {0,0,now,now}, name: :analyser)
+    GenServer.start_link(__MODULE__, {0,0,now,now})
   end
 
   def add({_duration, {_status, _message} } = record) do
-    GenServer.cast(:analyser, record)
+    GenServer.cast({:via, :gproc, {:p, :l, :analyser}}, record)
   end
 
   def get() do
-    GenServer.call(:analyser, :get)
+    GenServer.call({:via, :gproc, {:p, :l, :analyser}}, :get)
+  end
+
+  def init(state) do
+    :gproc.reg({:p, :l, :analyser})
+    {:ok, state}
   end
 
   def handle_call(:get, _from, state) do
@@ -65,7 +75,6 @@ defmodule StressMan.WorkerSupervisor do
   end
 
   def init({mod, func, args}) do
-
     worker_opts = [restart: :permanent,
                    function: func]
 
@@ -80,49 +89,5 @@ defmodule StressMan.WorkerSupervisor do
     ]
 
     supervise(children, opts)
-  end
-end
-
-
-defmodule StressMan.WorkerPool do
-  use GenServer
-  alias StressMan.WorkerSupervisor
-
-  def start_link(worker_supervisor_pid) do
-    Process.link(worker_supervisor_pid)
-    GenServer.start_link(__MODULE__, {worker_supervisor_pid})
-  end
-
-  def schedule(pid, url) do
-    GenServer.cast(pid, {:schedule, url})
-  end
-
-  def init({worker_supervisor_pid}) do
-    worker_pids = 1..System.schedulers_online()
-      |> Enum.each( fn _n -> WorkerSupervisor.start_worker(worker_supervisor_pid) end )
-    {:ok, {worker_supervisor_pid}}
-  end
-
-  def handle_cast({:schedule, url }, {worker_supervisor_pid} = state) do
-    [first_worker_pid|_rest] = Supervisor.which_children(worker_supervisor_pid) |> Enum.map(fn {_, pid, _, _} -> pid end) |> Enum.shuffle
-    GenServer.cast(first_worker_pid, url)
-    {:noreply, state}
-  end
-
-end
-
-
-defmodule StressMan.WorkerPoolSupervisor do
-  use Supervisor
-
-  def start_link(:ok) do
-    Supervisor.start_link(__MODULE__, :ok)
-  end
-
-  def init(:ok) do
-    children = [
-    ]
-
-    supervise(children, [strategy: :one_for_one])
   end
 end
