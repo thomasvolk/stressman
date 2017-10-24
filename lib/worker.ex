@@ -7,8 +7,8 @@ defmodule StressMan.Worker do
     GenServer.start_link(__MODULE__, state)
   end
 
-  def execute(url) do
-    GenServer.cast({:p, :l, :worker}, url)
+  def open(url) do
+    GenServer.cast({:via, :gproc, {:p, :l, :worker}}, url)
   end
 
   def init(state) do
