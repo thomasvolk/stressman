@@ -63,29 +63,39 @@ defmodule StressMan.WorkerSupervisor do
   use Supervisor
 
   def start_link({client}) do
-     start_link( { StressMan.Worker, :start_link, [{client}] } )
+    Supervisor.start_link(__MODULE__, {client})
   end
 
-  def start_link(mfa) do
-    Supervisor.start_link(__MODULE__, mfa)
-  end
+  def init({client}) do
 
-  def start_worker(pid) do
-    Supervisor.start_child(pid, [])
-  end
-
-  def init({mod, func, args}) do
-    worker_opts = [restart: :permanent,
-                   function: func]
-
-    children = [
-      worker(mod, args, worker_opts)
-    ]
+    children = 1..System.schedulers_online()
+      |> Enum.map( fn n -> worker(StressMan.Worker, [{client}], [id: n, restart: :permanent, function: :start_link]) end )
 
     opts = [
-      strategy: :simple_one_for_one,
+      strategy: :one_for_one,
       max_restarts: 5,
       max_seconds: 5
+    ]
+
+    supervise(children, opts)
+  end
+end
+
+defmodule StressMan.WorkerPoolSupervisor do
+  use Supervisor
+
+  def start_link({client}) do
+    Supervisor.start_link(__MODULE__, {client})
+  end
+
+  def init({client}) do
+    opts = [strategy: :one_for_all,
+            max_restart: 5,
+            max_time: 3600]
+
+    children = [
+      worker(StressMan.Analyser, []),
+      supervisor(StressMan.WorkerSupervisor, [{client}])
     ]
 
     supervise(children, opts)
