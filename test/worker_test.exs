@@ -6,12 +6,14 @@ defmodule WorkerPoolTest do
 
   test "the local client should start worker" do
 
-    StressMan.WorkerPoolSupervisor.start_link({&client/1})
+    worker_count = 4 # System.schedulers_online()
+    StressMan.WorkerPoolSupervisor.start_link({"http://example.com", &client/1, worker_count})
 
-    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
-    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
-    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
-    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
+    StressMan.WorkerPool.schedule_next()
+    StressMan.WorkerPool.schedule_next()
+    StressMan.WorkerPool.schedule_next()
+    StressMan.WorkerPool.schedule_next()
+    StressMan.WorkerPool.schedule_next()
 
     #:timer.sleep 2000
   end
