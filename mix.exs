@@ -15,15 +15,14 @@ defmodule StressMan.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [ mod: {StressMan, []},
-      applications: [:logger, :httpoison, :gproc]
+      applications: [:logger, :httpoison]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 0.13"},
-      {:gproc, "~> 0.6"}
+      {:httpoison, "~> 0.13"}
     ]
   end
 end

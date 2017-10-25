@@ -7,7 +7,8 @@ defmodule StressMan.Supervisor do
 
   def init(:ok) do
     children = [
-      supervisor(Task.Supervisor, [[name: StressMan.TasksSupervisor]])
+      supervisor(Task.Supervisor, [[name: StressMan.TasksSupervisor]]),
+      supervisor(Registry, [:unique, :stress_man_process_registry])
     ]
 
     supervise(children, [strategy: :one_for_one])

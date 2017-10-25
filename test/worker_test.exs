@@ -8,7 +8,12 @@ defmodule WorkerPoolTest do
 
     StressMan.WorkerPoolSupervisor.start_link({&client/1})
 
-    GenServer.cast({:via, :gproc, {:p, :l, :worker}}, "http://example.com")
+    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
+    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
+    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
+    StressMan.WorkerPoolSupervisor.schedule("http://example.com")
+
+    #:timer.sleep 2000
   end
 
 end
