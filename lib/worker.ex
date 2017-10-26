@@ -77,7 +77,15 @@ defmodule StressMan.WorkerPool do
     defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_pool"}}
 
     def schedule(end_time) do
+      schedule(StressMan.Time.now(), end_time)
+    end
+
+    def schedule(now, end_time) when now > end_time do
+    end
+
+    def schedule(now, end_time) do
       GenServer.cast(via_tuple, {:schedule_next, end_time})
+      schedule(StressMan.Time.now(), end_time)
     end
 
     def handle_cast({:schedule_next, end_time}, {url, client} = state) do

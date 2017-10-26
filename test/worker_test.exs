@@ -9,13 +9,7 @@ defmodule WorkerPoolTest do
     worker_count = 4 # System.schedulers_online()
     StressMan.WorkerPool.start({"http://example.com", &client/1, worker_count})
 
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 3000)
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 3000)
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 3000)
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 3000)
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 3000)
-
-    #:timer.sleep 2000
+    StressMan.WorkerPool.schedule(StressMan.Time.now() + 100)
   end
 
 end
