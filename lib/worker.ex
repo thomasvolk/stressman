@@ -66,7 +66,7 @@ end
 defmodule StressMan.WorkerPool do
     use GenServer
 
-    def start({url, client, worker_count}) do
+    def start(url, worker_count \\ System.schedulers_online(), client \\ &StressMan.HttpClientHandler.get/1) do
       StressMan.WorkerPoolSupervisor.start_link({url, client, worker_count})
     end
 
@@ -76,8 +76,9 @@ defmodule StressMan.WorkerPool do
 
     defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_pool"}}
 
-    def schedule(end_time) do
-      schedule(StressMan.Time.now(), end_time)
+    def schedule(duration) do
+      now = StressMan.Time.now()
+      schedule(now, now + duration)
     end
 
     def schedule(now, end_time) when now > end_time do

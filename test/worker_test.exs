@@ -6,10 +6,10 @@ defmodule WorkerPoolTest do
 
   test "the local client should start worker" do
 
-    worker_count = 4 # System.schedulers_online()
-    StressMan.WorkerPool.start({"http://example.com", &client/1, worker_count})
+    worker_count = 4
+    StressMan.WorkerPool.start("http://example.com", worker_count, &client/1)
 
-    StressMan.WorkerPool.schedule(StressMan.Time.now() + 100)
+    StressMan.WorkerPool.schedule(100)
   end
 
 end
