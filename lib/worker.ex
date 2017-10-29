@@ -35,7 +35,7 @@ defmodule StressMan.WorkerPool do
     end
 
     def start_link({} = state) do
-      GenServer.start_link(__MODULE__, state, name: via_tuple)
+      GenServer.start_link(__MODULE__, state, name: via_tuple())
     end
 
     defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_pool"}}
@@ -48,8 +48,8 @@ defmodule StressMan.WorkerPool do
     def schedule(now, end_time, _url, _client) when now > end_time do
     end
 
-    def schedule(now, end_time, url, client) do
-      GenServer.cast(via_tuple, {:schedule_next, end_time, url, client})
+    def schedule(_now, end_time, url, client) do
+      GenServer.cast(via_tuple(), {:schedule_next, end_time, url, client})
       schedule(StressMan.Time.now(), end_time, url, client)
     end
 

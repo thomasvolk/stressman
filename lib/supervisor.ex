@@ -19,8 +19,8 @@ end
 defmodule StressMan.WorkerPoolSupervisor do
   use Supervisor
 
-  def start_link({worker_count} = state) do
-    Supervisor.start_link(__MODULE__, state, name: via_tuple)
+  def start_link({_worker_count} = state) do
+    Supervisor.start_link(__MODULE__, state, name: via_tuple())
   end
 
   defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_pool_supervisor"}}
@@ -43,14 +43,14 @@ end
 defmodule StressMan.WorkerSupervisor do
   use Supervisor
 
-  def start_link({worker_count} = state) do
-    Supervisor.start_link(__MODULE__, state, name: via_tuple)
+  def start_link({_worker_count} = state) do
+    Supervisor.start_link(__MODULE__, state, name: via_tuple()  )
   end
 
   defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_supervisor"}}
 
   def worker() do
-    Supervisor.which_children(via_tuple) |> Enum.map(fn {_, pid, _, _} -> pid end)
+    Supervisor.which_children(via_tuple()) |> Enum.map(fn {_, pid, _, _} -> pid end)
   end
 
   def init({worker_count}) do

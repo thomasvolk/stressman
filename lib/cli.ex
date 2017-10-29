@@ -1,8 +1,7 @@
 defmodule StressMan.CLI do
-  alias StressMan.Report
   alias StressMan.Duration
-  alias StressMan.Manager
-  #alias StressMan.WorkerPool
+  alias StressMan.WorkerPool
+  alias StressMan.Analyser
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
@@ -24,11 +23,11 @@ defmodule StressMan.CLI do
       start the port mapper daemon first:
         epmd -daemon
       simple:
-        stressman --requests <REQUESTS> <URL>
+        stressman --duration <DURATION> <URL>
       client:
-        stressman --manager --cookie <COOKIE> --name <CLIENT_NAME_A@HOST> --nodes <SERVER_NAME_A@HOST>,<SERVER_NAME_B@HOST>,... --requests <REQUESTS> <URL>
+        stressman --cookie <COOKIE> --name <CLIENT_NAME_A@HOST> --nodes <SERVER_NAME_A@HOST>,<SERVER_NAME_B@HOST>,... --duration <DURATION> <URL>
       server:
-        stressman --server --cookie <COOKIE> --name <SERVER_NAME_A@HOST>
+        stressman --cookie <COOKIE> --name <SERVER_NAME_A@HOST>
     """)
   end
 
@@ -45,18 +44,17 @@ defmodule StressMan.CLI do
 
   defp run(options, output, http_client) do
     case options do
-      {[requests: n], [url], []} ->
-        Duration.measure( fn -> Manager.start(n, url, http_client) end )
-          |> Report.generate() |> print_report(output)
+      {[duration: d], [url], []} ->
+        WorkerPool.schedule(d, url)
+        Analyser.get() |> print_report(output)
         0
-      {[client: true, cookie: cookie, name: name, nodes: nodes, requests: n], [url], []} ->
-        Logger.info("start client: #{name}")
+      {[cookie: cookie, name: name, nodes: nodes, duration: d], [url], []} ->
+        Logger.info("start: #{name}")
         init_node(name, cookie)
         to_name_list(nodes) |> connect_to_nodes()
-        Duration.measure( fn -> Manager.start(n, url, http_client, Node.list()) end )
-          |> Report.generate() |> print_report(output)
+        # TODO ...
         0
-      {[server: true, cookie: cookie, name: name], [], []} ->
+      {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
         init_node(name, cookie)
         receive do
