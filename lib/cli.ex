@@ -1,6 +1,7 @@
 defmodule StressMan.CLI do
   alias StressMan.WorkerPool
   alias StressMan.Analyser
+  alias StressMan.Cluster
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &StressMan.HttpClientHandler.get/1))
@@ -30,32 +31,26 @@ defmodule StressMan.CLI do
     """)
   end
 
-  defp init_node(name, cookie) do
-    Node.start(:"#{name}")
-    Node.set_cookie(:"#{cookie}")
-  end
-
   defp to_name_list(comma_sep_list) do
      String.split(comma_sep_list, ",") |> Enum.map(&String.trim/1) |> Enum.filter( fn s -> String.length(s) > 0 end ) |> Enum.map(&String.to_atom/1)
   end
 
-  defp connect_to_nodes(node_list), do: node_list |> Enum.each(&Node.connect/1)
-
   defp run(options, output, client) do
     case options do
-      {[duration: d], [url], []} ->
-        WorkerPool.schedule(d, url, client)
-        Analyser.get() |> print_report(output)
+      {[duration: duration], [url], []} ->
+        WorkerPool.schedule(duration, url, client) |> print_report(output)
         0
-      {[cookie: cookie, name: name, nodes: nodes, duration: _d], [_url], []} ->
+      {[cookie: cookie, name: name, nodes: nodes, duration: duration], [url], []} ->
         Logger.info("start: #{name}")
-        init_node(name, cookie)
-        to_name_list(nodes) |> connect_to_nodes()
-        # TODO ...
+        Cluster.init_node(name, cookie)
+        to_name_list(nodes) |> Cluster.connect_to_nodes()
+        r = Cluster.schedule(Node.list(), duration, url, client)
+        IO.puts(inspect r)
+        #|> print_report(output)
         0
       {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
-        init_node(name, cookie)
+        Cluster.init_node(name, cookie)
         receive do
            { :halt_server } -> 0
         end

@@ -6,8 +6,7 @@ defmodule WorkerPoolTest do
 
   test "the local client should start worker" do
 
-    StressMan.WorkerPool.schedule(100, "http://example.com", &client/1)
-    report = StressMan.Analyser.get()
+    report = StressMan.WorkerPool.schedule(100, "http://example.com", &client/1)
     assert report.total_count > 0
     assert report.total_time > 100
   end
