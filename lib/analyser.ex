@@ -25,37 +25,20 @@ defmodule StressMan.Analyser do
     GenServer.call(via_tuple(), :reset)
   end
 
-  defp as_report({success_count, error_count, start_time, end_time}) do
-    total_time = end_time - start_time
-    total_count = success_count + error_count
-    average_duration = case total_count do
-      0 -> 0
-      _ -> total_time / total_count
-    end
-    throughput = case total_time do
-      0 -> 0
-      _ -> success_count / total_time
-    end
-    %{
-      total_count: total_count,
-      total_time: total_time,
-      success_count: success_count,
-      error_count: error_count,
-      average_duration: average_duration,
-      throughput: throughput
-    }
-  end
-
   def init(state) do
     {:ok, state}
   end
 
+  defp result({success_count, error_count, start_time, end_time}) do
+    {success_count, error_count, end_time - start_time}
+  end
+
   def handle_call(:get, _from, state) do
-    {:reply, state |> as_report, state}
+    {:reply, result(state) , state}
   end
 
   def handle_call(:reset, _from, state) do
-    {:reply, state |> as_report, initial_state()}
+    {:reply, result(state), initial_state()}
   end
 
   def handle_cast({:add, { _duration, {status, _message} } }, {success_count, error_count, start_time, _end_time}) do

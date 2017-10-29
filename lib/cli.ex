@@ -1,7 +1,7 @@
 defmodule StressMan.CLI do
   alias StressMan.WorkerPool
-  alias StressMan.Analyser
   alias StressMan.Cluster
+  alias StressMan.Report
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &StressMan.HttpClientHandler.get/1))
@@ -38,15 +38,13 @@ defmodule StressMan.CLI do
   defp run(options, output, client) do
     case options do
       {[duration: duration], [url], []} ->
-        WorkerPool.schedule(duration, url, client) |> print_report(output)
+        WorkerPool.schedule(duration, url, client) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name, nodes: nodes, duration: duration], [url], []} ->
         Logger.info("start: #{name}")
         Cluster.init_node(name, cookie)
         to_name_list(nodes) |> Cluster.connect_to_nodes()
-        r = Cluster.schedule(Node.list(), duration, url, client)
-        IO.puts(inspect r)
-        #|> print_report(output)
+        Cluster.schedule(Node.list(), duration, url, client) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
@@ -59,19 +57,5 @@ defmodule StressMan.CLI do
         usage(output)
         1
     end
-  end
-
-  def print_report(report, output) do
-    output.("""
-    total time (ms)       #{report.total_time}
-
-    total:                #{report.total_count}
-    success:              #{report.success_count}
-    errors:               #{report.error_count}
-
-    success calls
-      average (ms):       #{report.average_duration}
-      throughput (req/s): #{report.throughput * 1000}
-    """)
   end
 end
