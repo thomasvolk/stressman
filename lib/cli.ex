@@ -1,18 +1,17 @@
 defmodule StressMan.CLI do
-  alias StressMan.Duration
   alias StressMan.WorkerPool
   alias StressMan.Analyser
   require Logger
 
-  def main(args), do: System.halt(main(args, &IO.puts/1, &HTTPoison.get/1))
+  def main(args), do: System.halt(main(args, &IO.puts/1, &StressMan.HttpClientHandler.get/1))
 
-  def main(args, output, http_client) do
-    args |> parse_args |> run(output, http_client)
+  def main(args, output, client) do
+    args |> parse_args |> run(output, client)
   end
 
   defp parse_args(args) do
-    OptionParser.parse(args, aliases: [n: :requests],
-                              strict: [requests: :integer, server: :boolean, manager: :boolean, name: :string, nodes: :string, cookie: :string])
+    OptionParser.parse(args, aliases: [d: :duration],
+                              strict: [duration: :integer, name: :string, nodes: :string, cookie: :string])
   end
 
   def usage(output) do
@@ -42,13 +41,13 @@ defmodule StressMan.CLI do
 
   defp connect_to_nodes(node_list), do: node_list |> Enum.each(&Node.connect/1)
 
-  defp run(options, output, http_client) do
+  defp run(options, output, client) do
     case options do
       {[duration: d], [url], []} ->
-        WorkerPool.schedule(d, url)
+        WorkerPool.schedule(d, url, client)
         Analyser.get() |> print_report(output)
         0
-      {[cookie: cookie, name: name, nodes: nodes, duration: d], [url], []} ->
+      {[cookie: cookie, name: name, nodes: nodes, duration: _d], [_url], []} ->
         Logger.info("start: #{name}")
         init_node(name, cookie)
         to_name_list(nodes) |> connect_to_nodes()
@@ -69,15 +68,15 @@ defmodule StressMan.CLI do
 
   def print_report(report, output) do
     output.("""
-    total time (ms)       #{report.total_time_ms}
+    total time (ms)       #{report.total_time}
 
-    total:                #{report.total_cnt}
-    success:              #{report.success_cnt}
-    errors:               #{report.error_cnt}
+    total:                #{report.total_count}
+    success:              #{report.success_count}
+    errors:               #{report.error_count}
 
     success calls
-      average (ms):       #{report.average}
-      throughput (req/s): #{report.throughput}
+      average (ms):       #{report.average_duration}
+      throughput (req/s): #{report.throughput * 1000}
     """)
   end
 end
