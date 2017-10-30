@@ -2,7 +2,7 @@
 
 simple use:
 
-    stressman --requests <REQUESTS> <URL>
+    stressman --duration <DURATION> <URL>
 
 ### Distributed
 
@@ -12,11 +12,13 @@ start the port mapper daemon first:
 
 client:
 
-    stressman --manager --cookie <COOKIE> --name <CLIENT_NAME_A@HOST> --nodes <SERVER_NAME_A@HOST>,<SERVER_NAME_B@HOST>,... --requests <REQUESTS> <URL>
+    stressman --cookie <COOKIE> --name <CLIENT_NAME_A@HOST> \
+    --nodes <SERVER_NAME_A@HOST>,<SERVER_NAME_B@HOST>,... \
+    --duration <DURATION> <URL>
 
 server:
 
-    stressman --server --cookie <COOKIE> --name <SERVER_NAME_A@HOST>
+    stressman --cookie <COOKIE> --name <SERVER_NAME_A@HOST>
 
 ## Build
 
@@ -31,7 +33,7 @@ The package can be installed by adding `stressman` to your list of dependencies 
 ```elixir
 def deps do
   [
-    {:stressman, git: "https://github.com/thomasvolk/stressman.git", tag: "0.1.0"}
+    {:stressman, git: "https://github.com/thomasvolk/stressman.git", tag: "0.2.0"}
   ]
 end
 ```

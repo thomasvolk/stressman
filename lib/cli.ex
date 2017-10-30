@@ -17,7 +17,7 @@ defmodule StressMan.CLI do
 
   def usage(output) do
     output.("""
-    StressMan 0.1
+    StressMan 0.2
     Copyright 2017 Thomas Volk
     usage:
       start the port mapper daemon first:
