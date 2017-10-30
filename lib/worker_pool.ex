@@ -17,7 +17,7 @@ defmodule StressMan.WorkerPool do
     end
 
     def schedule(now, end_time, _url, _client) when now > end_time do
-      StressMan.Analyser.get()
+      StressMan.Analyser.reset()
     end
 
     def schedule(_now, end_time, url, client) do

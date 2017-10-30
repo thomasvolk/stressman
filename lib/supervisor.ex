@@ -1,15 +1,15 @@
 defmodule StressMan.Supervisor do
   use Supervisor
 
-  def start_link(:ok) do
-    Supervisor.start_link(__MODULE__, :ok)
+  def start_link({_worker_count} = state) do
+    Supervisor.start_link(__MODULE__, state)
   end
 
-  def init(:ok) do
+  def init({worker_count}) do
     children = [
       supervisor(Task.Supervisor, [[name: StressMan.TasksSupervisor]]),
       supervisor(Registry, [:unique, :stress_man_process_registry]),
-      supervisor(StressMan.WorkerPoolSupervisor, [{System.schedulers_online()}])
+      supervisor(StressMan.WorkerPoolSupervisor, [{worker_count}])
     ]
 
     supervise(children, [strategy: :one_for_one])
