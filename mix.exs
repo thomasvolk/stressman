@@ -22,7 +22,6 @@ defmodule StressMan.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:distillery, "~> 1.5", runtime: true},
       {:httpoison, "~> 0.13"}
     ]
   end
