@@ -1,6 +1,7 @@
 
 defmodule StressMan.Analyser do
   use GenServer
+  require Logger
 
   def start_link() do
     GenServer.start_link(__MODULE__, initial_state(), name: via_tuple())
@@ -47,6 +48,7 @@ defmodule StressMan.Analyser do
       :success -> {success_count + 1, error_count, start_time, now}
       _ -> {success_count, error_count + 1, start_time, now}
     end
+    Logger.info("analyser #{node()}-#{inspect self()}: #{inspect new_state}")
     {:noreply, new_state}
   end
 end
