@@ -1,6 +1,4 @@
 defmodule StressMan.Cluster do
-  alias StressMan.WorkerPool
-
   def init_node(name, cookie) do
     Node.start(:"#{name}")
     Node.set_cookie(:"#{cookie}")
@@ -8,23 +6,20 @@ defmodule StressMan.Cluster do
 
   def connect_to_nodes(node_list), do: node_list |> Enum.each(&Node.connect/1)
 
-  def schedule(nodes, duration, url, client) do
-    schedule(nodes, duration, url, client, [])
+  def schedule(nodes, function) do
+    schedule(nodes, function, [])
   end
 
-  defp schedule([], _duration, _url, _client, tasks) do
+  defp schedule([], _function, tasks) do
     tasks |> Enum.map(&Task.await(&1, :infinity))
   end
 
-  defp schedule([node|rest], duration, url, client, tasks) do
-    new_tasks = [Task.Supervisor.async({StressMan.TasksSupervisor, node}, StressMan.Cluster, :run_task, [duration, url, client]) | tasks]
-    schedule(rest, duration, url, client, new_tasks)
+  defp schedule([node|rest], function, tasks) do
+    new_tasks = [Task.Supervisor.async({StressMan.TasksSupervisor, node}, StressMan.Cluster, :run_task, [function]) | tasks]
+    schedule(rest, function, new_tasks)
   end
 
-  def run_task(duration, url, client) do
-    task = Task.async(fn ->
-      WorkerPool.schedule(duration, url, client)
-    end)
-    Task.await(task, :infinity)
+  def run_task(function) do
+    function.()
   end
 end
