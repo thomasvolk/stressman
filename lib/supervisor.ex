@@ -1,15 +1,14 @@
 defmodule StressMan.Supervisor do
   use Supervisor
 
-  def start_link({_worker_count} = state) do
+  def start_link({} = state) do
     Supervisor.start_link(__MODULE__, state)
   end
 
-  def init({worker_count}) do
+  def init({}) do
     children = [
       supervisor(Task.Supervisor, [[name: StressMan.TasksSupervisor]]),
       supervisor(Registry, [:unique, :stress_man_process_registry]),
-      supervisor(StressMan.WorkerPoolSupervisor, [{worker_count}])
     ]
 
     supervise(children, [strategy: :one_for_one])
@@ -21,6 +20,10 @@ defmodule StressMan.WorkerPoolSupervisor do
 
   def start_link({_worker_count} = state) do
     Supervisor.start_link(__MODULE__, state, name: via_tuple())
+  end
+
+  def stop() do
+    Supervisor.stop(via_tuple())
   end
 
   defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "worker_pool_supervisor"}}

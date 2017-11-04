@@ -16,7 +16,7 @@ defmodule StressMan do
   limitations under the License.
   """
   def start(_type, _args) do
-    StressMan.Supervisor.start_link({System.schedulers_online() * 4})
+    StressMan.Supervisor.start_link({})
   end
 
 end
