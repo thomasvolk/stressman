@@ -47,7 +47,7 @@ defmodule StressMan.CLI do
         Logger.info("start: #{name}")
         Cluster.init_node(name, cookie)
         to_name_list(nodes) |> Cluster.connect_to_nodes()
-        Cluster.schedule(Node.list(), fn -> Scheduler.schedule(task) end) |> Report.create() |> Report.print(output)
+        Cluster.schedule(Node.list(), task, &Scheduler.schedule/1) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")

@@ -6,20 +6,20 @@ defmodule StressMan.Cluster do
 
   def connect_to_nodes(node_list), do: node_list |> Enum.each(&Node.connect/1)
 
-  def schedule(nodes, function) do
-    schedule(nodes, function, [])
+  def schedule(nodes, task, scheduler) do
+    schedule(nodes, task, scheduler, [])
   end
 
-  defp schedule([], _function, tasks) do
+  defp schedule([], _task, _scheduler, tasks) do
     tasks |> Enum.map(&Task.await(&1, :infinity))
   end
 
-  defp schedule([node|rest], function, tasks) do
-    new_tasks = [Task.Supervisor.async({StressMan.TasksSupervisor, node}, StressMan.Cluster, :run_task, [function]) | tasks]
-    schedule(rest, function, new_tasks)
+  defp schedule([node|rest], task, scheduler, tasks) do
+    new_tasks = [Task.Supervisor.async({StressMan.TasksSupervisor, node}, StressMan.Cluster, :run_task, [task, scheduler]) | tasks]
+    schedule(rest, task, scheduler, new_tasks)
   end
 
-  def run_task(function) do
-    function.()
+  def run_task(task, scheduler) do
+    scheduler.(task)
   end
 end
