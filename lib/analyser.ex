@@ -4,15 +4,11 @@ defmodule StressMan.Analyser do
   require Logger
 
   def start_link() do
-    GenServer.start_link(__MODULE__, initial_state(), name: via_tuple())
+    now = StressMan.Time.now()
+    GenServer.start_link(__MODULE__, {0,0,now,now}, name: via_tuple())
   end
 
   defp via_tuple, do: {:via, Registry, {:stress_man_process_registry, "analyser"}}
-
-  defp initial_state() do
-    now = StressMan.Time.now()
-    {0,0,now,now}
-  end
 
   def add({_duration, {_status, _message} } = record) do
     GenServer.cast(via_tuple(), {:add, record})
@@ -20,10 +16,6 @@ defmodule StressMan.Analyser do
 
   def get() do
     GenServer.call(via_tuple(), :get)
-  end
-
-  def reset() do
-    GenServer.call(via_tuple(), :reset)
   end
 
   def init(state) do
@@ -36,10 +28,6 @@ defmodule StressMan.Analyser do
 
   def handle_call(:get, _from, state) do
     {:reply, result(state) , state}
-  end
-
-  def handle_call(:reset, _from, state) do
-    {:reply, result(state), initial_state()}
   end
 
   def handle_cast({:add, { _duration, {status, _message} } }, {success_count, error_count, start_time, _end_time}) do

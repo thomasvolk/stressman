@@ -39,14 +39,14 @@ defmodule StressMan.CLI do
     case options do
       {[duration: duration], [url], []} ->
         worker_count = System.schedulers_online()
-        WorkerPool.schedule({duration, url, client, worker_count}) |> Report.create() |> Report.print(output)
+        WorkerPool.schedule(duration, url, client, worker_count) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name, nodes: nodes, duration: duration], [url], []} ->
         worker_count = System.schedulers_online()
         Logger.info("start: #{name}")
         Cluster.init_node(name, cookie)
         to_name_list(nodes) |> Cluster.connect_to_nodes()
-        Cluster.schedule(Node.list(), fn -> WorkerPool.schedule({duration, url, client, worker_count}) end) |> Report.create() |> Report.print(output)
+        Cluster.schedule(Node.list(), fn -> WorkerPool.schedule(duration, url, client, worker_count) end) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
