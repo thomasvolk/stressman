@@ -1,7 +1,8 @@
 defmodule StressMan.CLI do
-  alias StressMan.WorkerPool
   alias StressMan.Cluster
   alias StressMan.Report
+  alias StressMan.Scheduler
+  alias StressMan.Scheduler.ScheduleTask
   require Logger
 
   def main(args), do: System.halt(main(args, &IO.puts/1, &StressMan.HttpClientHandler.get/1))
@@ -38,15 +39,15 @@ defmodule StressMan.CLI do
   defp run(options, output, client) do
     case options do
       {[duration: duration], [url], []} ->
-        worker_count = System.schedulers_online()
-        WorkerPool.schedule(duration, url, client, worker_count) |> Report.create() |> Report.print(output)
+        task = %ScheduleTask{duration: duration, url: url, client: client}
+        Scheduler.schedule(task) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name, nodes: nodes, duration: duration], [url], []} ->
-        worker_count = System.schedulers_online()
+        task = %ScheduleTask{duration: duration, url: url, client: client}
         Logger.info("start: #{name}")
         Cluster.init_node(name, cookie)
         to_name_list(nodes) |> Cluster.connect_to_nodes()
-        Cluster.schedule(Node.list(), fn -> WorkerPool.schedule(duration, url, client, worker_count) end) |> Report.create() |> Report.print(output)
+        Cluster.schedule(Node.list(), fn -> Scheduler.schedule(task) end) |> Report.create() |> Report.print(output)
         0
       {[cookie: cookie, name: name], [], []} ->
         Logger.info("start server: #{name}")
